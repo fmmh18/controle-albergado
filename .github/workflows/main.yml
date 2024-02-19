@@ -1,0 +1,53 @@
+name: DEPLOY LARAVEL APPLICATION
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+
+      - name: Disable Strict Host Key Checking
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 179.127.11.251 >> ~/.ssh/known_hosts
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: composer-deps-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-deps-
+
+      - name: Install dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+      - name: Deploy to SFTP Server
+        run: |
+          sshpass -p ${{ secrets.SFTP_PASSWORD }} \
+            rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='storage/' \
+            --exclude='.env*' \
+            ./ ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }}:/var/www/albergado/
+
+      - name: Execute chown command on remote server via SSH
+        run: |
+          sshpass -p ${{ secrets.SFTP_PASSWORD }} ssh ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }} 'chown -R www-data:www-data /var/www/albergado/'
+
+      - name: Execute Migrate Laravel
+        run: |
+          sshpass -p ${{ secrets.SFTP_PASSWORD }} ssh ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }} 'cd /var/www/albergado && php artisan migrate -v && php artisan storage:link'
