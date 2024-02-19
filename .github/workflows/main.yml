@@ -34,6 +34,12 @@ jobs:
       - name: Install dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader
 
+      - name: Copy .env.production to .env if .env doesn't exist
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.production .env
+          fi
+
       - name: Deploy to SFTP Server
         run: |
           sshpass -p ${{ secrets.SFTP_PASSWORD }} \
