@@ -54,6 +54,10 @@ export default defineConfig({
                 'resources/js/pages/responsive-table.init.js',
                 'resources/js/pages/google-maps.init.js',
                 'resources/js/pages/vector-maps.init.js',
+
+
+                //COMPONENTES
+                'resources/js/components/all/delete.js',
             ],
             refresh: true,
         }),
