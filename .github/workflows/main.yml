@@ -47,7 +47,6 @@ jobs:
             --exclude='.git' \
             --exclude='.github' \
             --exclude='storage/' \
-            --exclude='.env*' \
             ./ ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }}:/var/www/albergado/
 
       - name: Execute chown command on remote server via SSH
